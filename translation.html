@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Translation</title>
+    <!-- apple-touch-icon for home screen -->
+    <link rel="apple-touch-icon" href="icon.png">
+    <!-- API接続の事前確立（DNS/TLSハンドシェイクを前倒しし、変換ボタン押下時の待ち時間を削減） -->
+    <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin>
+    <style>
+        :root {
+            --bg: #f7f5f0;
+            --surface: #ffffff;
+            --text: #171412;
+            --text-secondary: #6f6a63;
+            --text-muted: #a89f92;
+            --border: #e4ddd1;
+            --border-strong: #333333;
+            --accent: #16213a;
+            --accent-hover: #223257;
+            --accent-active: #0f172a;
+            --radius-sm: 4px;
+            --radius-md: 5px;
+            --radius-lg: 6px;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 20px 40px;
+            position: relative;
+        }
+        /* ヘッダーデザイン */
+        header {
+            padding: 4px 0 22px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-title {
+            font-size: 21px;
+            font-weight: 700;
+            margin: 0;
+            color: #000000;
+            letter-spacing: -0.3px;
+        }
+        /* 言語切り替えバー */
+        .lang-swap-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 10px 10px 10px 18px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .lang-badge {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.2px;
+        }
+        .swap-arrow {
+            font-size: 15px;
+            color: var(--text);
+            cursor: pointer;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg);
+            user-select: none;
+            transition: transform 0.25s ease, background-color 0.2s ease;
+        }
+        .swap-arrow:active {
+            transform: scale(0.9) rotate(180deg);
+            background-color: var(--border);
+        }
+        /* 入出力エリア */
+        .text-box-wrapper {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-bottom: 18px;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .text-box-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(22, 33, 58, 0.08);
+        }
+        .text-box-wrapper label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+        textarea {
+            width: 100%;
+            height: 130px;
+            border: none;
+            resize: none;
+            font-size: 16px;
+            color: var(--text);
+            outline: none;
+            background: transparent;
+            padding: 0;
+            line-height: 1.6;
+        }
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+        /* 変換ボタンエリア（右寄せ） */
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+        }
+        .translate-btn {
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 13px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+        }
+        .translate-btn:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 4px 14px rgba(22, 33, 58, 0.2);
+            transform: translateY(-1px);
+        }
+        .translate-btn:active {
+            background-color: var(--accent-active);
+            transform: scale(0.97) translateY(0);
+            box-shadow: none;
+        }
+        /* 出力表示エリア */
+        .output-box {
+            min-height: 130px;
+            font-size: 16px;
+            color: var(--text);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .output-box.placeholder {
+            color: var(--text-muted);
+        }
+        /* 読み上げボタン */
+        .speech-btn-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+        .speech-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .speech-btn:hover {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        .speech-btn:active {
+            background-color: var(--border);
+        }
+        /* 簡易ローディング */
+        .loading-dots {
+            display: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 0.2px;
+        }
+        /* 設定ボタンと非表示のAPI設定 */
+        .settings-toggle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: background-color 0.15s ease, color 0.15s ease;
+            white-space: nowrap;
+        }
+        .settings-toggle:hover {
+            background-color: var(--surface);
+            color: var(--text);
+        }
+        .settings-panel {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            margin-bottom: 18px;
+        }
+        .settings-panel input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .settings-panel input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(22, 33, 58, 0.08);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1 class="header-title">Translation</h1>
+        <span class="settings-toggle" onclick="toggleSettings()">⚙️ 設定</span>
+    </header>
+
+    <!-- APIキー設定パネル（必要な時だけ開く） -->
+    <div id="settingsPanel" class="settings-panel">
+        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 6px;">Gemini APIキー:</label>
+        <input type="password" id="apiKeyInput" placeholder="ここにAPIキーを入力（自動保存されます）" onchange="saveApiKey()">
+        <p style="font-size: 11px; color: #888; margin: 4px 0 0 0;">※コード内の「EMBEDDED_API_KEY」に直接書き込んでいる場合は入力不要です。</p>
+    </div>
+
+    <!-- 言語切り替えバー -->
+    <div class="lang-swap-container">
+        <div class="lang-badge" id="sourceLangLabel">韓国語</div>
+        <div class="swap-arrow" onclick="swapLanguages()">➔</div>
+        <div class="lang-badge" id="targetLangLabel">日本語</div>
+    </div>
+
+    <!-- 入力エリア -->
+    <div class="text-box-wrapper">
+        <label id="inputLabel">韓国語 入力</label>
+        <textarea id="inputText" placeholder="タップしてテキストを入力..."></textarea>
+    </div>
+
+    <!-- 変換ボタン（右寄せ） -->
+    <div class="btn-container">
+        <button class="translate-btn" onclick="executeTranslation()">変換</button>
+    </div>
+
+    <div class="loading-dots" id="loadingIndicator">翻訳しています...</div>
+
+    <!-- 出力エリア -->
+    <div class="text-box-wrapper">
+        <label id="outputLabel">日本語 訳</label>
+        <div id="outputText" class="output-box placeholder">ここに結果が表示されます。</div>
+        <div class="speech-btn-wrapper">
+            <button class="speech-btn" onclick="speakText()">🔊 読み上げ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 【重要】ここに取得したAPIキーを直接貼り付けると、
+    // スマホで開くだけで即座に使用できるようになります！
+    // 例: const EMBEDDED_API_KEY = "AIzaSy...";
+    // ==========================================
+    const EMBEDDED_API_KEY = "";
+
+    // 翻訳モードの管理 (ko = 韓国語から日本語, ja = 日本語から韓国語)
+    let currentMode = "ko"; 
+
+    window.onload = function() {
+        // 保存されたAPIキーがあれば復元
+        const savedKey = localStorage.getItem('user_gemini_api_key');
+        if (savedKey) {
+            document.getElementById('apiKeyInput').value = savedKey;
+        } else if (EMBEDDED_API_KEY) {
+            document.getElementById('apiKeyInput').value = EMBEDDED_API_KEY;
+        }
+    }
+
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function saveApiKey() {
+        const key = document.getElementById('apiKeyInput').value;
+        localStorage.setItem('user_gemini_api_key', key);
+    }
+
+    function swapLanguages() {
+        const sourceLabel = document.getElementById('sourceLangLabel');
+        const targetLabel = document.getElementById('targetLangLabel');
+        const inputLabel = document.getElementById('inputLabel');
+        const outputLabel = document.getElementById('outputLabel');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+
+        // 入力と出力の中身をスワップ
+        const tempText = inputText.value;
+        inputText.value = outputText.classList.contains('placeholder') ? '' : outputText.innerText;
+        
+        if (tempText) {
+            outputText.innerText = tempText;
+            outputText.classList.remove('placeholder');
+        } else {
+            outputText.innerText = "ここに結果が表示されます。";
+            outputText.classList.add('placeholder');
+        }
+
+        if (currentMode === "ko") {
+            currentMode = "ja";
+            sourceLabel.innerText = "日本語";
+            targetLabel.innerText = "韓国語";
+            inputLabel.innerText = "日本語 入力";
+            outputLabel.innerText = "韓国語 訳";
+        } else {
+            currentMode = "ko";
+            sourceLabel.innerText = "韓国語";
+            targetLabel.innerText = "日本語";
+            inputLabel.innerText = "韓国語 入力";
+            outputLabel.innerText = "日本語 訳";
+        }
+    }
+
+    async function executeTranslation() {
+        const inputText = document.getElementById('inputText').value.trim();
+        const outputBox = document.getElementById('outputText');
+        const loader = document.getElementById('loadingIndicator');
+
+        // APIキーの取得優先度：1. コード内の定数、2. 画面で入力したキー
+        let apiKey = EMBEDDED_API_KEY || document.getElementById('apiKeyInput').value.trim();
+
+        if (!apiKey) {
+            alert("右上の「⚙️ 設定」からGemini APIキーを入力するか、HTMLコード内の「EMBEDDED_API_KEY」にAPIキーを設定してください。");
+            document.getElementById('settingsPanel').style.display = 'block';
+            return;
+        }
+
+        if (!inputText) {
+            alert("翻訳するテキストを入力してください。");
+            return;
+        }
+
+        loader.style.display = "block";
+        outputBox.innerText = "";
+        outputBox.classList.add('placeholder');
+
+        // gemini-1.5-flash は2026年に提供終了（シャットダウン）済みのため、
+        // 現行モデルの "v1beta" エンドポイントを使用します。
+        // 混雑エラー対策として、複数の軽量モデルを「同時に」呼び出し、最速で返ってきたものを採用します。
+        const MODEL_CANDIDATES = ["gemini-flash-lite-latest", "gemini-flash-latest"];
+        const buildUrl = (model) =>
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        // 翻訳用のプロンプト構築
+        let promptText = "";
+        if (currentMode === "ko") {
+            promptText = `あなたは優秀な韓国語・日本語の通訳者です。
+以下の韓国語を、旅行で使いやすい自然な日本語に翻訳してください。
+余計な解説、挨拶、前置き、引用符などは一切含めず、「翻訳結果のテキストのみ」を返してください。
+
+韓国語:
+${inputText}`;
+        } else {
+            promptText = `あなたは優秀な韓国語・日本語の通訳者です。
+以下の日本語を、現地でそのまま見せたり話したりして伝わる自然な韓国語に翻訳してください。
+余計な解説、挨拶、前置き、引用符などは一切含めず、「翻訳結果のテキストのみ」を返してください。
+
+日本語:
+${inputText}`;
+        }
+
+        const requestBody = {
+            contents: [{
+                parts: [{ text: promptText }]
+            }],
+            generationConfig: {
+                // 翻訳のような単純なタスクでは「思考」機能は不要で遅延の原因になるため無効化
+                thinkingConfig: { thinkingBudget: 0 },
+                // 旅行フレーズの翻訳に500トークンは過剰。上限を絞ることで生成時間の天井を下げる
+                maxOutputTokens: 300
+            }
+        };
+
+        // 1回の呼び出しに厳格なタイムアウトを設ける。
+        // タイムアウトを設けないと、サーバーが応答しない場合に無制限に待ち続けてしまい、
+        // これが「1〜2分待たされる」問題の最大の原因だった。
+        async function callGeminiOnce(model, timeoutMs) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const response = await fetch(buildUrl(model), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const message = errData.error?.message || `APIエラー(${response.status})が発生しました。`;
+                    const isOverloaded = response.status === 429 || response.status === 503 ||
+                        /high demand|overloaded|unavailable/i.test(message);
+                    const isRetired = response.status === 404 && /no longer available/i.test(message);
+
+                    const err = new Error(message);
+                    err.overloaded = isOverloaded || isRetired;
+                    throw err;
+                }
+
+                return response.json();
+            } catch (e) {
+                if (e.name === "AbortError") {
+                    const err = new Error("タイムアウトしました。");
+                    err.overloaded = true; // タイムアウトも「混雑」扱いにして次の手段へ
+                    throw err;
+                }
+                throw e;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        // 候補モデルを「同時に」呼び出し、最初に成功したものを採用する（直列リトライより大幅に速い）。
+        // 1つが混雑/タイムアウトでも、もう1つが先に返ってくれば待ち時間はそちらの速度で決まる。
+        async function raceModels(timeoutMs) {
+            const attempts = MODEL_CANDIDATES.map(model => callGeminiOnce(model, timeoutMs));
+            try {
+                return await Promise.any(attempts);
+            } catch (aggregateErr) {
+                const errors = aggregateErr.errors || [];
+                const overloadedErr = errors.find(e => e && e.overloaded);
+                throw overloadedErr || errors[0] || new Error("翻訳に失敗しました。");
+            }
+        }
+
+        try {
+            let data;
+            try {
+                // 1回目: 6秒でタイムアウトし、混雑していれば即座に次へ切り替える
+                data = await raceModels(6000);
+            } catch (err) {
+                if (err.overloaded) {
+                    // 全モデルが混雑/タイムアウトした場合のみ、少し待って1回だけ再挑戦
+                    await new Promise(r => setTimeout(r, 300));
+                    data = await raceModels(9000);
+                } else {
+                    throw err;
+                }
+            }
+
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                const result = data.candidates[0].content.parts[0].text.trim();
+                outputBox.innerText = result;
+                outputBox.classList.remove('placeholder');
+            } else {
+                outputBox.innerText = "翻訳結果の取得に失敗しました。";
+            }
+        } catch (error) {
+            console.error(error);
+            if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+                // fetch自体がブロックされた場合（サーバーからの応答すら受け取れていない）
+                let reason = "・ネット接続が切れていないか確認してください。\n" +
+                    "・広告ブロッカーやプライバシー系の拡張機能（uBlock Originなど）が\n" +
+                    "  generativelanguage.googleapis.com への通信をブロックしていないか確認してください。\n" +
+                    "・このHTMLをファイルとして直接開いている場合、ブラウザやセキュリティソフトが\n" +
+                    "  ローカルファイルからの外部通信を制限していることがあります。\n" +
+                    "・社内/学校のWi-Fiやフィルタリング機能付きルーターなど、\n" +
+                    "  特定のネットワークで外部APIがブロックされていないか確認してください。\n" +
+                    "・別のブラウザ（Chrome/Safariなど）や別のネットワーク（Wi-Fi⇔モバイル回線）で試してみてください。";
+                outputBox.innerText = `エラー: サーバーに接続できませんでした（Failed to fetch）\n\n${reason}`;
+            } else if (error.overloaded) {
+                outputBox.innerText = `エラー: 現在Gemini側が混雑しています（複数モデルで再試行しましたが失敗しました）。\n\n・少し時間をおいてから、もう一度「変換」を押してみてください。\n・時間帯を変えると改善することが多いです。`;
+            } else {
+                outputBox.innerText = `エラー: ${error.message}\n\n・APIキーが正しいか確認してください。\n・ネット接続を確認してください。`;
+            }
+        } finally {
+            loader.style.display = "none";
+        }
+    }
+
+    // 日本語・韓国語の読み上げ機能
+    function speakText() {
+        const text = document.getElementById('outputText').innerText;
+        const placeholderActive = document.getElementById('outputText').classList.contains('placeholder');
+        if (!text || placeholderActive) return;
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (currentMode === "ko") {
+            utterance.lang = 'ja-JP'; // 翻訳結果の日本語を話す
+        } else {
+            utterance.lang = 'ko-KR'; // 翻訳結果の韓国語を話す
+        }
+        window.speechSynthesis.speak(utterance);
+    }
+</script>
+
+</body>
+</html>
