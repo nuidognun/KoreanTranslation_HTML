@@ -6,261 +6,205 @@
     <title>Translation</title>
     <!-- apple-touch-icon for home screen -->
     <link rel="apple-touch-icon" href="icon.png">
-    <!-- API接続の事前確立（DNS/TLSハンドシェイクを前倒しし、変換ボタン押下時の待ち時間を削減） -->
-    <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossorigin>
     <style>
-        :root {
-            --bg: #f7f5f0;
-            --surface: #ffffff;
-            --text: #171412;
-            --text-secondary: #6f6a63;
-            --text-muted: #a89f92;
-            --border: #e4ddd1;
-            --border-strong: #333333;
-            --accent: #16213a;
-            --accent-hover: #223257;
-            --accent-active: #0f172a;
-            --radius-sm: 4px;
-            --radius-md: 5px;
-            --radius-lg: 6px;
-        }
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         body {
-            background-color: var(--bg);
+            background-color: #f4eae1; /* 温かみのあるベージュ */
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
+            color: #333333;
         }
         .app-container {
             width: 100%;
             max-width: 480px;
-            background-color: var(--bg);
+            background-color: #f4eae1; /* 全体をベージュで統一 */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 28px 20px 40px;
+            padding: 20px;
             position: relative;
         }
         /* ヘッダーデザイン */
         header {
-            padding: 4px 0 22px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 10px 0 20px 0;
+            border-bottom: 1px solid #dcd1c4;
+            margin-bottom: 20px;
         }
         .header-title {
-            font-size: 21px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 500;
             margin: 0;
-            color: #000000;
-            letter-spacing: -0.3px;
+            color: #4a3e3d;
+            letter-spacing: 0.5px;
         }
         /* 言語切り替えバー */
         .lang-swap-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            padding: 10px 10px 10px 18px;
+            background: #ffffff;
+            border-radius: 30px;
+            padding: 6px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            border: 1px solid var(--border);
+            border: 1px solid #e6ded5;
         }
         .lang-badge {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text);
-            letter-spacing: 0.2px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a3e3d;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
         }
         .swap-arrow {
-            font-size: 15px;
-            color: var(--text);
+            font-size: 20px;
+            color: #7d706e;
             cursor: pointer;
-            width: 34px;
-            height: 34px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: var(--bg);
+            padding: 4px 10px;
             user-select: none;
-            transition: transform 0.25s ease, background-color 0.2s ease;
+            transition: transform 0.3s ease;
         }
         .swap-arrow:active {
             transform: scale(0.9) rotate(180deg);
-            background-color: var(--border);
         }
         /* 入出力エリア */
         .text-box-wrapper {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            margin-bottom: 18px;
-            padding: 16px 18px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e6ded5;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .text-box-wrapper:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(22, 33, 58, 0.08);
         }
         .text-box-wrapper label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            font-weight: 700;
-            letter-spacing: 0.6px;
-            text-transform: uppercase;
+            font-size: 13px;
+            color: #8c7e7c;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         textarea {
             width: 100%;
             height: 130px;
             border: none;
             resize: none;
-            font-size: 16px;
-            color: var(--text);
+            font-size: 17px;
+            color: #2c2c2c;
             outline: none;
             background: transparent;
             padding: 0;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         textarea::placeholder {
-            color: var(--text-muted);
+            color: #b0a69a;
         }
         /* 変換ボタンエリア（右寄せ） */
         .btn-container {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         .translate-btn {
-            background-color: var(--accent);
+            background-color: #3b5998; /* 手書き画像に合わせた落ち着いたブルー */
             color: #ffffff;
             border: none;
-            border-radius: var(--radius-md);
-            padding: 13px 32px;
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
-        }
-        .translate-btn:hover {
-            background-color: var(--accent-hover);
-            box-shadow: 0 4px 14px rgba(22, 33, 58, 0.2);
-            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(59, 89, 152, 0.3);
+            transition: background-color 0.2s, transform 0.1s;
         }
         .translate-btn:active {
-            background-color: var(--accent-active);
-            transform: scale(0.97) translateY(0);
-            box-shadow: none;
+            background-color: #2d4373;
+            transform: scale(0.98);
         }
         /* 出力表示エリア */
         .output-box {
             min-height: 130px;
-            font-size: 16px;
-            color: var(--text);
-            line-height: 1.6;
+            font-size: 17px;
+            color: #2c2c2c;
+            line-height: 1.5;
             white-space: pre-wrap;
             word-break: break-all;
         }
         .output-box.placeholder {
-            color: var(--text-muted);
+            color: #b0a69a;
         }
         /* 読み上げボタン */
         .speech-btn-wrapper {
             display: flex;
             justify-content: flex-start;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
+            margin-top: 8px;
         }
         .speech-btn {
             background: none;
             border: none;
-            color: var(--text-secondary);
-            font-size: 13px;
+            color: #3b5998;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            padding: 6px 10px;
-            border-radius: var(--radius-sm);
+            padding: 6px 12px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            transition: background-color 0.15s ease, color 0.15s ease;
-        }
-        .speech-btn:hover {
-            background-color: var(--bg);
-            color: var(--text);
+            gap: 4px;
         }
         .speech-btn:active {
-            background-color: var(--border);
+            background-color: #f0ede9;
         }
         /* 簡易ローディング */
         .loading-dots {
             display: none;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 13px;
-            margin-top: 4px;
-            margin-bottom: 10px;
+            color: #3b5998;
+            font-weight: bold;
+            font-size: 15px;
+            margin-top: 10px;
             text-align: center;
-            letter-spacing: 0.2px;
         }
         /* 設定ボタンと非表示のAPI設定 */
         .settings-toggle {
-            font-size: 13px;
-            color: var(--text-secondary);
+            position: absolute;
+            top: 25px;
+            right: 20px;
+            font-size: 14px;
+            color: #7d706e;
             cursor: pointer;
-            padding: 6px 10px;
-            border-radius: var(--radius-sm);
-            transition: background-color 0.15s ease, color 0.15s ease;
-            white-space: nowrap;
-        }
-        .settings-toggle:hover {
-            background-color: var(--surface);
-            color: var(--text);
+            text-decoration: underline;
         }
         .settings-panel {
             display: none;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 14px 16px;
-            margin-bottom: 18px;
+            background: #ffffff;
+            border: 1px solid #e6ded5;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
         }
         .settings-panel input {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-strong);
-            border-radius: var(--radius-sm);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
             font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .settings-panel input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(22, 33, 58, 0.08);
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <span class="settings-toggle" onclick="toggleSettings()">⚙️ 設定</span>
     <header>
         <h1 class="header-title">Translation</h1>
-        <span class="settings-toggle" onclick="toggleSettings()">⚙️ 設定</span>
     </header>
 
     <!-- APIキー設定パネル（必要な時だけ開く） -->
@@ -391,8 +335,8 @@
 
         // gemini-1.5-flash は2026年に提供終了（シャットダウン）済みのため、
         // 現行モデルの "v1beta" エンドポイントを使用します。
-        // 混雑エラー対策として、複数の軽量モデルを「同時に」呼び出し、最速で返ってきたものを採用します。
-        const MODEL_CANDIDATES = ["gemini-flash-lite-latest", "gemini-flash-latest"];
+        // 混雑エラー対策として、メインモデルがダメな場合に備えて予備モデルも用意しておきます。
+        const MODEL_CANDIDATES = ["gemini-flash-latest", "gemini-flash-lite-latest"];
         const buildUrl = (model) =>
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -414,84 +358,73 @@ ${inputText}`;
 ${inputText}`;
         }
 
-        const requestBody = {
+        // 「思考」機能の指定方法はモデル世代によって異なり(thinkingLevel or thinkingBudget)、
+        // かつGoogle側の仕様変更で急に無効化されることがあるため、複数パターンを順番に試す
+        const GENERATION_CONFIG_VARIANTS = [
+            { thinkingConfig: { thinkingLevel: "minimal" }, maxOutputTokens: 500 }, // Gemini 3系向け
+            { thinkingConfig: { thinkingBudget: 0 }, maxOutputTokens: 500 },        // Gemini 2.5系向け
+            { maxOutputTokens: 500 }                                                // 思考設定なし（最終手段）
+        ];
+
+        const buildRequestBody = (generationConfig) => ({
             contents: [{
                 parts: [{ text: promptText }]
             }],
-            generationConfig: {
-                // 翻訳のような単純なタスクでは「思考」機能は不要で遅延の原因になるため無効化
-                thinkingConfig: { thinkingBudget: 0 },
-                // 旅行フレーズの翻訳に500トークンは過剰。上限を絞ることで生成時間の天井を下げる
-                maxOutputTokens: 300
-            }
-        };
+            generationConfig
+        });
 
-        // 1回の呼び出しに厳格なタイムアウトを設ける。
-        // タイムアウトを設けないと、サーバーが応答しない場合に無制限に待ち続けてしまい、
-        // これが「1〜2分待たされる」問題の最大の原因だった。
-        async function callGeminiOnce(model, timeoutMs) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                const response = await fetch(buildUrl(model), {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody),
-                    signal: controller.signal
-                });
+        // 1つのモデル・設定パターンにつき、混雑エラー(429/503)なら少し待って最大2回までリトライ
+        async function callGemini(model, generationConfig, retriesLeft) {
+            const response = await fetch(buildUrl(model), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(buildRequestBody(generationConfig))
+            });
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    const message = errData.error?.message || `APIエラー(${response.status})が発生しました。`;
-                    const isOverloaded = response.status === 429 || response.status === 503 ||
-                        /high demand|overloaded|unavailable/i.test(message);
-                    const isRetired = response.status === 404 && /no longer available/i.test(message);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                const message = errData.error?.message || "APIエラーが発生しました。";
+                const isOverloaded = response.status === 429 || response.status === 503 ||
+                    /high demand|overloaded|unavailable/i.test(message);
+                const isRetired = response.status === 404 && /no longer available/i.test(message);
+                const isInvalidArg = response.status === 400; // thinkingConfigの形式違いなどはここに来る
 
-                    const err = new Error(message);
-                    err.overloaded = isOverloaded || isRetired;
-                    throw err;
+                if (isOverloaded && retriesLeft > 0) {
+                    await new Promise(r => setTimeout(r, 400));
+                    return callGemini(model, generationConfig, retriesLeft - 1);
                 }
 
-                return response.json();
-            } catch (e) {
-                if (e.name === "AbortError") {
-                    const err = new Error("タイムアウトしました。");
-                    err.overloaded = true; // タイムアウトも「混雑」扱いにして次の手段へ
-                    throw err;
-                }
-                throw e;
-            } finally {
-                clearTimeout(timer);
+                const err = new Error(message);
+                err.overloaded = isOverloaded || isRetired; // 次の候補モデルへ切り替える対象
+                err.invalidArg = isInvalidArg; // 次のgenerationConfigパターンへ切り替える対象
+                throw err;
             }
-        }
 
-        // 候補モデルを「同時に」呼び出し、最初に成功したものを採用する（直列リトライより大幅に速い）。
-        // 1つが混雑/タイムアウトでも、もう1つが先に返ってくれば待ち時間はそちらの速度で決まる。
-        async function raceModels(timeoutMs) {
-            const attempts = MODEL_CANDIDATES.map(model => callGeminiOnce(model, timeoutMs));
-            try {
-                return await Promise.any(attempts);
-            } catch (aggregateErr) {
-                const errors = aggregateErr.errors || [];
-                const overloadedErr = errors.find(e => e && e.overloaded);
-                throw overloadedErr || errors[0] || new Error("翻訳に失敗しました。");
-            }
+            return response.json();
         }
 
         try {
             let data;
-            try {
-                // 1回目: 6秒でタイムアウトし、混雑していれば即座に次へ切り替える
-                data = await raceModels(6000);
-            } catch (err) {
-                if (err.overloaded) {
-                    // 全モデルが混雑/タイムアウトした場合のみ、少し待って1回だけ再挑戦
-                    await new Promise(r => setTimeout(r, 300));
-                    data = await raceModels(9000);
-                } else {
-                    throw err;
+            let lastError;
+
+            outer:
+            for (const model of MODEL_CANDIDATES) {
+                for (const generationConfig of GENERATION_CONFIG_VARIANTS) {
+                    try {
+                        data = await callGemini(model, generationConfig, 2);
+                        break outer; // 成功したら全ループを抜ける
+                    } catch (err) {
+                        lastError = err;
+                        if (err.invalidArg) continue; // 同じモデルで次のconfigパターンを試す
+                        if (err.overloaded) break;     // このモデルは諦めて次の候補モデルへ
+                        throw err;                      // それ以外のエラーは即座に投げる
+                    }
                 }
             }
+
+            if (!data) throw lastError || new Error("翻訳に失敗しました。");
 
             if (data.candidates && data.candidates[0].content.parts[0].text) {
                 const result = data.candidates[0].content.parts[0].text.trim();
